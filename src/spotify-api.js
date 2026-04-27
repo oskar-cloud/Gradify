@@ -48,7 +48,7 @@ class SpotifyAPI {
   }
 
   async getPlaylistTracks(playlistId, offset = 0, limit = 50) {
-    return this._request(`/playlists/${playlistId}/items?offset=${offset}&limit=50`);
+    return this._request(`/playlists/${playlistId}/items?offset=${offset}&limit=${limit}`);
   }
 
   async getPlaylist(playlistId) {

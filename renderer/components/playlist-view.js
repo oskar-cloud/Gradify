@@ -9,7 +9,16 @@ window.PlaylistView = (() => {
       if (playlist?.__error) throw new Error(playlist.message);
       if (tracksData?.__error) throw new Error(tracksData.message);
       const art = playlist.images?.[0]?.url || '';
-      const tracks = (tracksData?.items || []).map(i => i.track ? i : { track: i }).filter(i => i.track && i.track.id);
+      console.log('[PlaylistView] tracksData:', tracksData);
+      
+      let itemsArray = tracksData?.items || [];
+      if (Array.isArray(tracksData)) itemsArray = tracksData;
+
+      const tracks = itemsArray.map(i => {
+        if (i.track) return i;
+        if (i.item) return { track: i.item }; // Feb 2026 API update changed 'track' to 'item'
+        return { track: i };
+      }).filter(i => i.track && i.track.id);
       const totalDur = tracks.reduce((s, i) => s + (i.track.duration_ms || 0), 0);
       container.innerHTML = `
         <div class="playlist-header">
