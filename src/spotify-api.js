@@ -48,7 +48,7 @@ class SpotifyAPI {
   }
 
   async getPlaylistTracks(playlistId, offset = 0, limit = 50) {
-    return this._request(`/playlists/${playlistId}/tracks?offset=${offset}&limit=50`);
+    return this._request(`/playlists/${playlistId}/items?offset=${offset}&limit=50`);
   }
 
   async getPlaylist(playlistId) {
@@ -71,9 +71,9 @@ class SpotifyAPI {
     return this._request(`/me/player/recently-played?limit=${limit}`);
   }
 
-  async search(query, types = 'track,artist,album,playlist', limit = 20) {
+  async search(query, types = 'track,album,artist,playlist', limit = 10) {
     const q = encodeURIComponent(query);
-    return this._request(`/search?q=${q}&type=${types}&limit=20`);
+    return this._request(`/search?q=${q}&type=track,artist,album,playlist&limit=10`);
   }
 
   async play(options = {}) {
