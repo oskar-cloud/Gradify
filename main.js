@@ -81,10 +81,29 @@ function startHeadlessBackend() {
     
     const platformPaths = paths[process.platform] || paths.linux;
     let browserPath = null;
-    for (const p of platformPaths) {
-      if (fs.existsSync(p)) {
-        browserPath = p;
-        break;
+    
+    // Attempt 1: Find via PATH
+    const isWin = process.platform === 'win32';
+    const cmd = isWin ? 'where' : 'command -v';
+    const names = isWin ? ['msedge', 'chrome'] : ['google-chrome', 'chrome', 'chromium', 'chromium-browser', 'microsoft-edge', 'msedge', 'brave'];
+    
+    for (const name of names) {
+      try {
+        const p = require('child_process').execSync(`${cmd} ${name}`, { stdio: 'pipe' }).toString().split('\\n')[0].trim();
+        if (p && fs.existsSync(p)) {
+          browserPath = p;
+          break;
+        }
+      } catch (e) {}
+    }
+
+    // Attempt 2: Fallback to hardcoded paths
+    if (!browserPath) {
+      for (const p of platformPaths) {
+        if (fs.existsSync(p)) {
+          browserPath = p;
+          break;
+        }
       }
     }
 
