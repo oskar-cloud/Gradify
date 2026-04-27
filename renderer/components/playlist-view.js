@@ -6,10 +6,12 @@ window.PlaylistView = (() => {
       if (playlist?.__error) throw new Error(playlist.message);
 
       let tracksData = await window.gradify.spotify.getPlaylistTracks(playlistId, 0, 100);
+      let isRestricted = false;
       
       if (tracksData?.__error && tracksData.message.includes('403')) {
-        console.warn('[PlaylistView] 403 Forbidden on /items endpoint. Falling back to embedded metadata tracks.');
-        tracksData = playlist.tracks;
+        console.warn('[PlaylistView] 403 Forbidden on /items endpoint. Tracklist is restricted.');
+        isRestricted = true;
+        tracksData = { items: [] }; // Empty tracklist
       } else if (tracksData?.__error) {
         throw new Error(tracksData.message);
       }
@@ -36,18 +38,40 @@ window.PlaylistView = (() => {
             <div class="playlist-stats">${tracks.length} tracks · ${fmtDur(totalDur)}</div>
           </div>
         </div>
+        
+        ${isRestricted ? `
+          <div class="empty-state" style="margin-top:40px;">
+            <p>Spotify has hidden the tracklist for this public playlist.<br>However, you can still listen to it!</p>
+            <button class="btn btn-primary" id="btnPlayRestricted" style="margin-top:20px;padding:12px 24px;border-radius:24px;font-weight:bold;cursor:pointer;">Play Playlist</button>
+          </div>
+        ` : `
         <div class="track-list">
           <div class="track-list-header"><span>#</span><span>Title</span><span>Album</span><span>${Icons.clock}</span></div>
           ${tracks.map((item, i) => trackRow(item.track, i + 1)).join('')}
-        </div>`;
-      container.querySelectorAll('.track-row').forEach(row => {
-        row.addEventListener('click', async () => {
-          const offset = parseInt(row.dataset.offset);
-          const r = await window.gradify.spotify.play({ contextUri: playlist.uri, offset });
-          if (r?.__error) { App.showToast(r.message); return; }
-          setTimeout(() => App.pollNow(), 500);
+        </div>
+        `}
+        `;
+
+      if (isRestricted) {
+        const btn = container.querySelector('#btnPlayRestricted');
+        if (btn) {
+          btn.addEventListener('click', async () => {
+            btn.textContent = 'Starting...';
+            const r = await window.gradify.spotify.play({ contextUri: playlist.uri });
+            if (r?.__error) App.showToast(r.message);
+            setTimeout(() => { btn.textContent = 'Play Playlist'; App.pollNow(); }, 1000);
+          });
+        }
+      } else {
+        container.querySelectorAll('.track-row').forEach(row => {
+          row.addEventListener('click', async () => {
+            const offset = parseInt(row.dataset.offset);
+            const r = await window.gradify.spotify.play({ contextUri: playlist.uri, offset });
+            if (r?.__error) { App.showToast(r.message); return; }
+            setTimeout(() => App.pollNow(), 500);
+          });
         });
-      });
+      }
     } catch(e) {
       let msg = e.message;
       if (msg.includes('403')) {
