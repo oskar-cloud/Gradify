@@ -2,12 +2,18 @@ window.PlaylistView = (() => {
   async function show(container, playlistId) {
     container.innerHTML = `<div class="loading-spinner"></div>`;
     try {
-      const [playlist, tracksData] = await Promise.all([
-        window.gradify.spotify.getPlaylist(playlistId),
-        window.gradify.spotify.getPlaylistTracks(playlistId, 0, 100)
-      ]);
+      let playlist = await window.gradify.spotify.getPlaylist(playlistId);
       if (playlist?.__error) throw new Error(playlist.message);
-      if (tracksData?.__error) throw new Error(tracksData.message);
+
+      let tracksData = await window.gradify.spotify.getPlaylistTracks(playlistId, 0, 100);
+      
+      if (tracksData?.__error && tracksData.message.includes('403')) {
+        console.warn('[PlaylistView] 403 Forbidden on /items endpoint. Falling back to embedded metadata tracks.');
+        tracksData = playlist.tracks;
+      } else if (tracksData?.__error) {
+        throw new Error(tracksData.message);
+      }
+
       const art = playlist.images?.[0]?.url || '';
       console.log('[PlaylistView] tracksData:', tracksData);
       
