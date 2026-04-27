@@ -70,7 +70,12 @@ function startHeadlessBackend() {
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
         "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
-        "/Applications/Arc.app/Contents/MacOS/Arc"
+        "/Applications/Arc.app/Contents/MacOS/Arc",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi",
+        "/Applications/Opera.app/Contents/MacOS/Opera",
+        "/Applications/Helium.app/Contents/MacOS/Helium",
+        "/Applications/Yandex.app/Contents/MacOS/Yandex"
       ],
       linux: [
         "/usr/bin/google-chrome",
@@ -85,7 +90,12 @@ function startHeadlessBackend() {
     // Attempt 1: Find via PATH
     const isWin = process.platform === 'win32';
     const cmd = isWin ? 'where' : 'command -v';
-    const names = isWin ? ['msedge', 'chrome'] : ['google-chrome', 'chrome', 'chromium', 'chromium-browser', 'microsoft-edge', 'msedge', 'brave'];
+    const names = isWin ? ['msedge', 'chrome', 'vivaldi', 'opera', 'brave'] : [
+      'google-chrome', 'chrome', 'chromium', 'chromium-browser', 
+      'microsoft-edge', 'msedge', 'brave', 'brave-browser', 
+      'vivaldi', 'opera', 'opera-developer', 'yandex-browser', 
+      'yandex-browser-beta', 'ungoogled-chromium', 'helium'
+    ];
     
     for (const name of names) {
       try {
