@@ -13,22 +13,29 @@ window.PlaylistView = (() => {
         try {
           const htmlRes = await fetch(playlist.external_urls.spotify);
           const html = await htmlRes.text();
-          const regex = /spotify:track:([a-zA-Z0-9]{22})/g;
+          const regex = /aria-labelledby="listrow-title-track-spotify:track:([a-zA-Z0-9]{22})(?:-\d+)?"\s+aria-label="([^"]+)"/g;
           let match;
-          const ids = new Set();
-          // Spotify's getTracks endpoint allows max 50 ids
-          while ((match = regex.exec(html)) !== null && ids.size < 50) {
-            ids.add(match[1]);
+          const scrapedTracks = [];
+          const seen = new Set();
+          
+          while ((match = regex.exec(html)) !== null && scrapedTracks.length < 50) {
+            if (!seen.has(match[1])) {
+              seen.add(match[1]);
+              scrapedTracks.push({
+                track: {
+                  id: match[1],
+                  name: match[2].replace(/&amp;/g, '&'),
+                  uri: `spotify:track:${match[1]}`,
+                  artists: [{ name: 'Scraped Preview' }],
+                  album: { name: 'Public Playlist' }
+                }
+              });
+            }
           }
           
-          if (ids.size > 0) {
-            const idString = Array.from(ids).join(',');
-            const tracksRes = await window.gradify.spotify.getTracks(idString);
-            if (tracksRes && tracksRes.tracks) {
-              tracksData = { items: tracksRes.tracks.filter(t => t).map(t => ({ track: t })) };
-            } else {
-              throw new Error('Failed to fetch scraped tracks');
-            }
+          if (scrapedTracks.length > 0) {
+            tracksData = { items: scrapedTracks };
+            isRestricted = false;
           } else {
             throw new Error('No tracks found in HTML scrape');
           }
