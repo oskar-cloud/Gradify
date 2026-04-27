@@ -5,7 +5,7 @@ window.Player = (() => {
   function render() {
     const el = document.getElementById('playerBar');
     if (!state.track) {
-      el.innerHTML = `<div class="player-nothing">No track playing — play something on Spotify to get started</div>`;
+      el.innerHTML = `<div class="player-nothing">Play something on Spotify to see it here</div>`;
       return;
     }
     const t = state.track;
@@ -54,16 +54,25 @@ window.Player = (() => {
     const vol = document.getElementById('volumeTrack');
     const volBtn = document.getElementById('btnVolume');
 
-    prev?.addEventListener('click', async () => { try { await window.gradify.spotify.previous(); setTimeout(() => window.App?.pollNow(), 300); } catch(e) { showToast(e.message); } });
-    next?.addEventListener('click', async () => { try { await window.gradify.spotify.next(); setTimeout(() => window.App?.pollNow(), 300); } catch(e) { showToast(e.message); } });
+    prev?.addEventListener('click', async () => {
+      const r = await window.gradify.spotify.previous();
+      if (r?.__error) { App.showToast(r.message); return; }
+      setTimeout(() => App.pollNow(), 400);
+    });
+
+    next?.addEventListener('click', async () => {
+      const r = await window.gradify.spotify.next();
+      if (r?.__error) { App.showToast(r.message); return; }
+      setTimeout(() => App.pollNow(), 400);
+    });
+
     pp?.addEventListener('click', async () => {
-      try {
-        if (state.isPlaying) await window.gradify.spotify.pause();
-        else await window.gradify.spotify.play();
-        state.isPlaying = !state.isPlaying;
-        pp.innerHTML = state.isPlaying ? Icons.pause : Icons.play;
-        manageTimer();
-      } catch(e) { showToast(e.message); }
+      const fn = state.isPlaying ? window.gradify.spotify.pause : () => window.gradify.spotify.play();
+      const r = await fn();
+      if (r?.__error) { App.showToast(r.message); return; }
+      state.isPlaying = !state.isPlaying;
+      pp.innerHTML = state.isPlaying ? Icons.pause : Icons.play;
+      manageTimer();
     });
 
     prog?.addEventListener('click', async (e) => {
@@ -72,7 +81,8 @@ window.Player = (() => {
       const pos = Math.round(ratio * state.durationMs);
       state.progressMs = pos;
       updateProgressUI();
-      try { await window.gradify.spotify.seek(pos); } catch(e) { showToast(e.message); }
+      const r = await window.gradify.spotify.seek(pos);
+      if (r?.__error) App.showToast(r.message);
     });
 
     vol?.addEventListener('click', async (e) => {
@@ -81,7 +91,7 @@ window.Player = (() => {
       state.volume = Math.round(ratio * 100);
       const fill = document.getElementById('volumeFill');
       if (fill) fill.style.width = state.volume + '%';
-      try { await window.gradify.spotify.setVolume(state.volume); } catch(e) { showToast(e.message); }
+      await window.gradify.spotify.setVolume(state.volume);
     });
 
     let prevVol = 50;
@@ -91,7 +101,7 @@ window.Player = (() => {
       const fill = document.getElementById('volumeFill');
       if (fill) fill.style.width = state.volume + '%';
       volBtn.innerHTML = state.volume === 0 ? Icons.volumeMute : Icons.volume;
-      try { await window.gradify.spotify.setVolume(state.volume); } catch {}
+      await window.gradify.spotify.setVolume(state.volume);
     });
   }
 
@@ -139,9 +149,7 @@ window.Player = (() => {
   function pct() { return state.durationMs > 0 ? (state.progressMs / state.durationMs) * 100 : 0; }
   function formatTime(ms) { const s = Math.floor(ms/1000); const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
   function getCurrentTrack() { return state.track; }
-
   function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
-  function showToast(msg) { if (window.App) window.App.showToast(msg); }
 
   return { render, update, getCurrentTrack };
 })();

@@ -18,12 +18,12 @@ window.Sidebar = (() => {
       </div>
       <div class="sidebar-label">Playlists</div>
       <div class="playlist-list" id="playlistList">
-        ${playlists.map(p => `
+        ${playlists.filter(p => p).map(p => `
           <div class="playlist-item ${activePlaylistId===p.id?'active':''}" data-playlist-id="${p.id}">
             ${p.images?.[0]?.url
               ? `<img class="playlist-thumb" src="${p.images[0].url}" alt="">`
               : `<div class="playlist-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-tertiary)">${Icons.music.replace(/width="\d+"/, 'width="16"').replace(/height="\d+"/, 'height="16"')}</div>`}
-            <span class="playlist-item-name">${escapeHtml(p.name)}</span>
+            <span class="playlist-item-name">${escapeHtml(p.name || 'Unnamed')}</span>
           </div>
         `).join('')}
       </div>

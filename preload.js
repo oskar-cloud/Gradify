@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('gradify', {
     login: () => ipcRenderer.invoke('auth:login'),
     logout: () => ipcRenderer.invoke('auth:logout'),
     check: () => ipcRenderer.invoke('auth:check'),
+    getToken: () => ipcRenderer.invoke('auth:get-token'),
     onStatusChange: (cb) => {
       ipcRenderer.on('auth:status-changed', (_e, data) => cb(data));
     }
@@ -24,7 +25,8 @@ contextBridge.exposeInMainWorld('gradify', {
     previous: () => ipcRenderer.invoke('spotify:previous'),
     setVolume: (percent) => ipcRenderer.invoke('spotify:set-volume', percent),
     seek: (positionMs) => ipcRenderer.invoke('spotify:seek', positionMs),
-    fetchImage: (url) => ipcRenderer.invoke('image:fetch', url)
+    fetchImage: (url) => ipcRenderer.invoke('image:fetch', url),
+    transferPlayback: (deviceId) => ipcRenderer.invoke('spotify:transfer-playback', deviceId)
   },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),

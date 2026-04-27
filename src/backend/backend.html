@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Gradify Audio Backend</title>
+</head>
+<body>
+  <h1>Gradify Audio Backend - Headless Player</h1>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script>
+    let player = null;
+    let hasConnected = false;
+
+    // Await the SDK script to load
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      console.log('Spotify SDK is ready to initialize.');
+      connectToBackend();
+    };
+
+    function connectToBackend() {
+      // Connect to the local WebSocket server hosted by main.js
+      // We read the port from window.location.port or fallback
+      const port = window.location.port || 14837;
+      
+      // Fetch token initially
+      fetch('/token')
+        .then(r => r.json())
+        .then(data => {
+          if (data.token) {
+            initPlayer(data.token);
+          } else {
+            console.error('No token received');
+            setTimeout(connectToBackend, 2000);
+          }
+        })
+        .catch(e => {
+          console.error('Token fetch error', e);
+          setTimeout(connectToBackend, 2000);
+        });
+
+      // Simple long-polling or interval to refresh token internally if needed,
+      // but the SDK handles token refresh via the getOAuthToken callback.
+    }
+
+    function initPlayer(initialToken) {
+      if (player) return;
+
+      player = new window.Spotify.Player({
+        name: 'Gradify',
+        getOAuthToken: cb => {
+          // Whenever the SDK needs a fresh token, fetch it from our local server
+          fetch('/token')
+            .then(r => r.json())
+            .then(data => {
+              if (data.token) {
+                cb(data.token);
+              } else {
+                cb(initialToken);
+              }
+            })
+            .catch(e => {
+              console.error('getOAuthToken error:', e);
+              cb(initialToken);
+            });
+        },
+        volume: 0.5
+      });
+
+      player.addListener('ready', ({ device_id }) => {
+        console.log('✓ Headless backend is ready with device ID:', device_id);
+        fetch('/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ready: true, deviceId: device_id })
+        });
+      });
+
+      player.addListener('not_ready', ({ device_id }) => {
+        console.log('Device ID has gone offline', device_id);
+      });
+
+      player.addListener('initialization_error', ({ message }) => {
+        console.error('Initialization error:', message);
+      });
+
+      player.addListener('authentication_error', ({ message }) => {
+        console.error('Authentication error:', message);
+      });
+
+      player.addListener('account_error', ({ message }) => {
+        console.error('Account error:', message);
+      });
+
+      player.addListener('playback_error', ({ message }) => {
+        console.error('Playback error:', message);
+      });
+
+      player.connect().then(success => {
+        if (success) {
+          hasConnected = true;
+          console.log('Successfully connected to Spotify backend!');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

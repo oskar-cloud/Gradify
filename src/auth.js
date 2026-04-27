@@ -6,7 +6,9 @@ const path = require('path');
 
 const CLIENT_ID = '2dfc95532ef84590b5fbe47bc4f9a964';
 const REDIRECT_URI = 'http://127.0.0.1:8888/callback';
+const SCOPE_VERSION = 2; // Bump this when scopes change to force re-auth
 const SCOPES = [
+  'streaming',
   'user-read-playback-state',
   'user-modify-playback-state',
   'user-read-currently-playing',
@@ -55,6 +57,13 @@ class SpotifyAuth {
       } else {
         data = JSON.parse(raw);
       }
+
+      // Force re-auth if scopes changed
+      if (data.scopeVersion !== SCOPE_VERSION) {
+        this.logout();
+        return false;
+      }
+
       this.accessToken = data.accessToken;
       this.refreshToken = data.refreshToken;
       this.expiresAt = data.expiresAt;
@@ -74,7 +83,8 @@ class SpotifyAuth {
     const data = JSON.stringify({
       accessToken: this.accessToken,
       refreshToken: this.refreshToken,
-      expiresAt: this.expiresAt
+      expiresAt: this.expiresAt,
+      scopeVersion: SCOPE_VERSION
     });
     try {
       if (safeStorage.isEncryptionAvailable()) {
