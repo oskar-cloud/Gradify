@@ -232,6 +232,7 @@ function registerIPC() {
   safeHandle('spotify:get-me', (_e) => api.getMe());
   safeHandle('spotify:get-playlists', (_e, offset, limit) => api.getPlaylists(offset, limit));
   safeHandle('spotify:get-playlist', (_e, id) => api.getPlaylist(id));
+  safeHandle('spotify:get-tracks', (_e, ids) => api.getTracks(ids));
   safeHandle('spotify:get-playlist-tracks', (_e, id, offset, limit) => api.getPlaylistTracks(id, offset, limit));
   safeHandle('spotify:get-saved-tracks', (_e, offset, limit) => api.getSavedTracks(offset, limit));
   safeHandle('spotify:get-currently-playing', () => api.getCurrentlyPlaying());

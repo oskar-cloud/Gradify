@@ -9,9 +9,34 @@ window.PlaylistView = (() => {
       let isRestricted = false;
       
       if (tracksData?.__error && tracksData.message.includes('403')) {
-        console.warn('[PlaylistView] 403 Forbidden on /items endpoint. Tracklist is restricted.');
-        isRestricted = true;
-        tracksData = { items: [] }; // Empty tracklist
+        console.warn('[PlaylistView] 403 Forbidden. Scraping track IDs from public URL...');
+        try {
+          const htmlRes = await fetch(playlist.external_urls.spotify);
+          const html = await htmlRes.text();
+          const regex = /spotify:track:([a-zA-Z0-9]{22})/g;
+          let match;
+          const ids = new Set();
+          // Spotify's getTracks endpoint allows max 50 ids
+          while ((match = regex.exec(html)) !== null && ids.size < 50) {
+            ids.add(match[1]);
+          }
+          
+          if (ids.size > 0) {
+            const idString = Array.from(ids).join(',');
+            const tracksRes = await window.gradify.spotify.getTracks(idString);
+            if (tracksRes && tracksRes.tracks) {
+              tracksData = { items: tracksRes.tracks.filter(t => t).map(t => ({ track: t })) };
+            } else {
+              throw new Error('Failed to fetch scraped tracks');
+            }
+          } else {
+            throw new Error('No tracks found in HTML scrape');
+          }
+        } catch (e) {
+          console.error('[PlaylistView] Scrape fallback failed:', e);
+          isRestricted = true;
+          tracksData = { items: [] };
+        }
       } else if (tracksData?.__error) {
         throw new Error(tracksData.message);
       }

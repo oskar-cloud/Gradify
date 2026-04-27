@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('gradify', {
     getMe: () => ipcRenderer.invoke('spotify:get-me'),
     getPlaylists: (offset, limit) => ipcRenderer.invoke('spotify:get-playlists', offset, limit),
     getPlaylist: (id) => ipcRenderer.invoke('spotify:get-playlist', id),
+    getTracks: (ids) => ipcRenderer.invoke('spotify:get-tracks', ids),
     getPlaylistTracks: (id, offset, limit) => ipcRenderer.invoke('spotify:get-playlist-tracks', id, offset, limit),
     getSavedTracks: (offset, limit) => ipcRenderer.invoke('spotify:get-saved-tracks', offset, limit),
     getCurrentlyPlaying: () => ipcRenderer.invoke('spotify:get-currently-playing'),
