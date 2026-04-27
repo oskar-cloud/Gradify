@@ -1,0 +1,12 @@
+{
+  "name": "gradify",
+  "version": "1.0.0",
+  "description": "A beautifully restyled Spotify client with dynamic gradients",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^34.0.0"
+  }
+}
