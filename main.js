@@ -67,8 +67,10 @@ function startHeadlessBackend() {
         "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
       ],
       darwin: [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+        "/Applications/Arc.app/Contents/MacOS/Arc"
       ],
       linux: [
         "/usr/bin/google-chrome",
