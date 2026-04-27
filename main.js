@@ -60,10 +60,31 @@ function startHeadlessBackend() {
     const port = headlessServer.address().port;
     console.log('[Gradify] Headless backend server listening on port', port);
 
-    // 2. Locate Microsoft Edge or Chrome
-    const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
-    const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-    let browserPath = fs.existsSync(edgePath) ? edgePath : (fs.existsSync(chromePath) ? chromePath : null);
+    // 2. Locate Microsoft Edge or Chrome (Cross-Platform)
+    const paths = {
+      win32: [
+        "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+      ],
+      darwin: [
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+      ],
+      linux: [
+        "/usr/bin/google-chrome",
+        "/usr/bin/microsoft-edge-stable",
+        "/usr/bin/chromium"
+      ]
+    };
+    
+    const platformPaths = paths[process.platform] || paths.linux;
+    let browserPath = null;
+    for (const p of platformPaths) {
+      if (fs.existsSync(p)) {
+        browserPath = p;
+        break;
+      }
+    }
 
     if (!browserPath) {
       console.warn('[Gradify] Neither Edge nor Chrome found. Headless backend cannot start.');
