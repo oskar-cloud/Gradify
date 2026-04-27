@@ -9,7 +9,7 @@ window.PlaylistView = (() => {
       if (playlist?.__error) throw new Error(playlist.message);
       if (tracksData?.__error) throw new Error(tracksData.message);
       const art = playlist.images?.[0]?.url || '';
-      const tracks = (tracksData?.items || []).filter(i => i.track);
+      const tracks = (tracksData?.items || []).map(i => i.track ? i : { track: i }).filter(i => i.track && i.track.id);
       const totalDur = tracks.reduce((s, i) => s + (i.track.duration_ms || 0), 0);
       container.innerHTML = `
         <div class="playlist-header">
@@ -34,7 +34,11 @@ window.PlaylistView = (() => {
         });
       });
     } catch(e) {
-      container.innerHTML = `<div class="empty-state"><p>Failed to load playlist: ${esc(e.message)}</p></div>`;
+      let msg = e.message;
+      if (msg.includes('403')) {
+        msg = "Spotify's Feb 2026 update restricted third-party apps from viewing public playlists you don't own.";
+      }
+      container.innerHTML = `<div class="empty-state"><p>Failed to load playlist:<br><br>${esc(msg)}</p></div>`;
     }
   }
   function trackRow(t, num) {
